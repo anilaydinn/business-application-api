@@ -18,19 +18,6 @@ func NewAPI(service *Service) API {
 	}
 }
 
-func (api *API) AnalyzeTextHandler(c *fiber.Ctx) error {
-
-	pnModel, err := api.service.AnalyzeText("aasdasd")
-
-	if err != nil {
-		c.Status(fiber.StatusBadRequest)
-	}
-
-	c.JSON(pnModel)
-	c.Status(fiber.StatusOK)
-	return nil
-}
-
 func (api *API) GetCommentsHandler(c *fiber.Ctx) error {
 
 	comments, err := api.service.GetComments()
@@ -118,5 +105,28 @@ func (api *API) UpdateCommentHandler(c *fiber.Ctx) error {
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}
+	return nil
+}
+
+func (api *API) AnalyzeTextHandler(c *fiber.Ctx) error {
+
+	commentDTO := CommentDTO{}
+	err := c.BodyParser(&commentDTO)
+
+	if err != nil {
+		c.Status(fiber.StatusBadRequest)
+	}
+
+	comment, err := api.service.AnalyzeText(commentDTO.Text)
+
+	switch err {
+	case nil:
+		c.JSON(comment)
+		c.Status(fiber.StatusOK)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
+
 	return nil
 }

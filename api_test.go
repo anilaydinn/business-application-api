@@ -3,9 +3,12 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strconv"
 	"testing"
 	"time"
@@ -18,7 +21,7 @@ func TestGetComments(t *testing.T) {
 
 	Convey("Given comments", t, func() {
 		repository := GetCleanTestRepository()
-		service := NewService(repository)
+		service := NewService(repository, nil, nil)
 		api := NewAPI(&service)
 
 		comment1 := Comment{
@@ -62,7 +65,7 @@ func TestGetComment(t *testing.T) {
 
 	Convey("Given comments", t, func() {
 		repository := GetCleanTestRepository()
-		service := NewService(repository)
+		service := NewService(repository, nil, nil)
 		api := NewAPI(&service)
 
 		comment1 := Comment{
@@ -116,7 +119,7 @@ func TestAddComment(t *testing.T) {
 	Convey("Given valid comment details", t, func() {
 		repository := GetCleanTestRepository()
 
-		service := NewService(repository)
+		service := NewService(repository, nil, nil)
 		api := NewAPI(&service)
 
 		Convey("When add user request sent", func() {
@@ -157,7 +160,7 @@ func TestDeleteComment(t *testing.T) {
 	Convey("Given comment delete request", t, func() {
 		repository := GetCleanTestRepository()
 
-		service := NewService(repository)
+		service := NewService(repository, nil, nil)
 		api := NewAPI(&service)
 
 		comment := Comment{
@@ -189,7 +192,7 @@ func TestUpdateComment(t *testing.T) {
 	Convey("Given comment details", t, func() {
 		repository := GetCleanTestRepository()
 
-		service := NewService(repository)
+		service := NewService(repository, nil, nil)
 		api := NewAPI(&service)
 
 		commentID := GenerateUUID(8)
@@ -228,6 +231,87 @@ func TestUpdateComment(t *testing.T) {
 
 				So(actualResult.ID, ShouldEqual, comment.ID)
 				So(actualResult.Text, ShouldEqual, commentDTO.Text)
+			})
+		})
+	})
+}
+
+func TestAnalyzeText(t *testing.T) {
+	Convey("Given a text", t, func() {
+		repository := GetCleanTestRepository()
+
+		csvfile, err := os.Open("data/IMDBDataset.csv") //dosyayı al
+
+		if err != nil {
+			fmt.Println("csv açılamadi")
+		}
+
+		defer csvfile.Close() //program sonunda dosyayı kapa
+
+		csvLines, err := csv.NewReader(csvfile).ReadAll() //dosyayı oku
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		reviews := []reviewData{}
+
+		for _, line := range csvLines {
+			reviews = append(reviews, reviewData{
+				comment: line[0],
+				class:   line[1], //'1'. sutun
+			})
+		}
+
+		positiveReview := []string{}
+		negativeReview := []string{}
+
+		for _, item := range reviews { //sadece reviewleri alma ve ayırma
+			if item.class == "positive" {
+				positiveReview = append(positiveReview, item.comment)
+			}
+			if item.class == "negative" {
+				negativeReview = append(negativeReview, item.comment)
+			}
+		}
+		positiveReviewWords := preProcessReviews(positiveReview)
+
+		negativeReviewWords := preProcessReviews(negativeReview)
+
+		service := NewService(repository, positiveReviewWords, negativeReviewWords)
+		api := NewAPI(&service)
+
+		Convey("When request sent with comment details", func() {
+			app := SetupApp(&api)
+
+			commentDTO := CommentDTO{
+				Text: "This is very bad!",
+			}
+
+			reqBody, err := json.Marshal(commentDTO)
+			So(err, ShouldBeNil)
+
+			req, err := http.NewRequest(http.MethodPost, "/analyze", bytes.NewReader(reqBody))
+			req.Header.Add("Content-type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+			So(err, ShouldBeNil)
+
+			resp, err := app.Test(req, 30000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 200", func() {
+				So(resp.StatusCode, ShouldEqual, 200)
+			})
+
+			Convey("Then text analyzed comment response should return", func() {
+				actualResult := Comment{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err = json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult.Text, ShouldEqual, "This is very bad!")
+				So(actualResult.PNModel, ShouldNotBeNil)
+				So(actualResult.PNModel.PN, ShouldEqual, "negative")
 			})
 		})
 	})

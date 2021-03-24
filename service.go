@@ -2,30 +2,51 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"regexp"
 	"strings"
 
+	"github.com/bbalet/stopwords"
+	"github.com/euskadi31/go-tokenizer"
 	"github.com/google/uuid"
+	"github.com/navossoc/bayesian"
 )
 
 type Service struct {
-	repository *Repository
+	repository          *Repository
+	positiveReviewWords []string
+	negativeReviewWords []string
 }
 
 type Comment struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
+	ID      string  `json:"id"`
+	Text    string  `json:"text"`
+	PNModel PNModel `json:"pnModel"`
 }
 
 type PNModel struct {
-	Negative float32 `json:"negative"`
-	Positive float32 `json:"positive"`
+	PN            string  `json:"pn"`
+	PositiveRatio float64 `json:"positiveRatio"`
+	NegativeRatio float64 `json:"negativeRatio"`
 }
+
+type reviewData struct {
+	comment string
+	class   string
+}
+
+const (
+	positive bayesian.Class = "positive"
+	negative bayesian.Class = "negative"
+)
 
 var CommentNotFoundError error = errors.New("Comment not found!")
 
-func NewService(repository *Repository) Service {
+func NewService(repository *Repository, positiveReviewWords []string, negativeReviewWords []string) Service {
 	return Service{
-		repository: repository,
+		repository:          repository,
+		positiveReviewWords: positiveReviewWords,
+		negativeReviewWords: negativeReviewWords,
 	}
 }
 
@@ -97,12 +118,63 @@ func (service *Service) UpdateComment(commentID, text string) (*Comment, error) 
 
 }
 
-func (service *Service) AnalyzeText(text string) (PNModel, error) {
+func (service *Service) AnalyzeText(text string) (*Comment, error) {
 
-	return PNModel{
-		Negative: 50.02,
-		Positive: 60.45,
+	classifier := bayesian.NewClassifier(positive, negative) //classları belirleme
+
+	classifier.Learn(service.positiveReviewWords, positive) //classları atama
+	classifier.Learn(service.negativeReviewWords, negative)
+	classifier.ConvertTermsFreqToTfIdf()
+
+	sentenceWords := preProcessSentence(text)
+
+	fmt.Println(classifier.ProbScores(sentenceWords))
+
+	_, result, _ := classifier.ProbScores(sentenceWords)
+
+	fmt.Println(classifier.ProbScores(sentenceWords))
+
+	ratios, _, _ := classifier.ProbScores(sentenceWords)
+
+	variable := ""
+	if result == 0 {
+		variable = "positive"
+	}
+	if result == 1 {
+		variable = "negative"
+	}
+
+	return &Comment{
+		Text: text,
+		PNModel: PNModel{
+			PN: variable, PositiveRatio: ratios[0], NegativeRatio: ratios[1]},
 	}, nil
+}
+
+func preProcessSentence(sentence string) (sentenceWords []string) { //sentenceleri kelimelere ayırarak tokenleştirme
+	re := regexp.MustCompile("[^a-zA-Z 0-9]+") //harf olmayanları sil
+	t := tokenizer.New()
+	newSentence := re.ReplaceAllString(strings.ToLower(sentence), "")  //harf olmayanları sil
+	cleadnedSentence := stopwords.CleanString(newSentence, "en", true) //stopword sil
+	tokenizedSentence := t.Tokenize(cleadnedSentence)
+	for _, word := range tokenizedSentence {
+		sentenceWords = append(sentenceWords, word)
+	}
+	return sentenceWords
+}
+
+func preProcessReviews(reviews []string) (reviewWords []string) { //reviewleri kelimelere ayırma
+	re := regexp.MustCompile("[^a-zA-Z 0-9]+") //harf olmayanları sil
+	t := tokenizer.New()
+	for _, sentence := range reviews {
+		newSentence := re.ReplaceAllString(strings.ToLower(sentence), "")  //harf olmayanları sil
+		cleadnedSentence := stopwords.CleanString(newSentence, "en", true) //stopword sil
+		tokenizedSentence := t.Tokenize(cleadnedSentence)
+		for _, word := range tokenizedSentence {
+			reviewWords = append(reviewWords, word)
+		}
+	}
+	return reviewWords
 }
 
 func GenerateUUID(length int) string {
