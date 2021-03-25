@@ -72,10 +72,13 @@ func (service *Service) GetComment(commentID string) (*Comment, error) {
 
 func (service *Service) AddComment(text string) (*Comment, error) {
 
-	comment := Comment{
-		ID:   GenerateUUID(8),
-		Text: text,
+	comment, err := service.AnalyzeText(text)
+
+	if err != nil {
+		return nil, err
 	}
+
+	comment.ID = GenerateUUID(8)
 
 	commentResponse, err := service.repository.AddComment(comment)
 
@@ -118,7 +121,7 @@ func (service *Service) UpdateComment(commentID, text string) (*Comment, error) 
 
 }
 
-func (service *Service) AnalyzeText(text string) (*Comment, error) {
+func (service *Service) AnalyzeText(text string) (Comment, error) {
 
 	classifier := bayesian.NewClassifier(positive, negative) //classları belirleme
 
@@ -144,7 +147,7 @@ func (service *Service) AnalyzeText(text string) (*Comment, error) {
 		variable = "negative"
 	}
 
-	return &Comment{
+	return Comment{
 		Text: text,
 		PNModel: PNModel{
 			PN: variable, PositiveRatio: ratios[0], NegativeRatio: ratios[1]},

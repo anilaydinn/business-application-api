@@ -119,13 +119,51 @@ func TestAddComment(t *testing.T) {
 	Convey("Given valid comment details", t, func() {
 		repository := GetCleanTestRepository()
 
-		service := NewService(repository, nil, nil)
+		csvfile, err := os.Open("data/IMDBDataset.csv") //dosyayı al
+
+		if err != nil {
+			fmt.Println("csv açılamadi")
+		}
+
+		defer csvfile.Close() //program sonunda dosyayı kapa
+
+		csvLines, err := csv.NewReader(csvfile).ReadAll() //dosyayı oku
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		reviews := []reviewData{}
+
+		for _, line := range csvLines {
+			reviews = append(reviews, reviewData{
+				comment: line[0],
+				class:   line[1], //'1'. sutun
+			})
+		}
+
+		positiveReview := []string{}
+		negativeReview := []string{}
+
+		for _, item := range reviews { //sadece reviewleri alma ve ayırma
+			if item.class == "positive" {
+				positiveReview = append(positiveReview, item.comment)
+			}
+			if item.class == "negative" {
+				negativeReview = append(negativeReview, item.comment)
+			}
+		}
+		positiveReviewWords := preProcessReviews(positiveReview)
+
+		negativeReviewWords := preProcessReviews(negativeReview)
+
+		service := NewService(repository, positiveReviewWords, negativeReviewWords)
 		api := NewAPI(&service)
 
 		Convey("When add user request sent", func() {
 
 			commentDTO := CommentDTO{
-				Text: "Test",
+				Text: "I don't like this movie. I hate it. I don't watch again.",
 			}
 
 			reqBody, err := json.Marshal(commentDTO)
@@ -147,10 +185,13 @@ func TestAddComment(t *testing.T) {
 				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
 				actualResult := Comment{}
 				err := json.Unmarshal(actualResponseBody, &actualResult)
-
+				fmt.Println(err)
 				So(err, ShouldBeNil)
 				So(actualResult.ID, ShouldNotBeNil)
 				So(actualResult.Text, ShouldEqual, commentDTO.Text)
+				So(actualResult.PNModel.PN, ShouldEqual, "negative")
+				So(actualResult.PNModel.NegativeRatio, ShouldNotBeNil)
+				So(actualResult.PNModel.PositiveRatio, ShouldNotBeNil)
 			})
 		})
 	})

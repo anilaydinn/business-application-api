@@ -128,5 +128,4 @@ func (api *API) AnalyzeTextHandler(c *fiber.Ctx) error {
 	}
 	return nil
 
-	return nil
 }

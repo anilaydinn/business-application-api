@@ -11,8 +11,9 @@ import (
 )
 
 type CommentEntity struct {
-	ID   string `bson:"id"`
-	Text string `bson:"text"`
+	ID      string  `bson:"id"`
+	Text    string  `bson:"text"`
+	PNModel PNModel `bson:"pnModel"`
 }
 
 type Repository struct {
@@ -139,6 +140,11 @@ func convertCommentModelToEntity(comment *Comment) CommentEntity {
 	return CommentEntity{
 		ID:   comment.ID,
 		Text: comment.Text,
+		PNModel: PNModel{
+			PN:            comment.PNModel.PN,
+			PositiveRatio: comment.PNModel.PositiveRatio,
+			NegativeRatio: comment.PNModel.NegativeRatio,
+		},
 	}
 }
 
@@ -146,6 +152,11 @@ func convertCommentEntityToModel(commentEntity CommentEntity) Comment {
 	return Comment{
 		ID:   commentEntity.ID,
 		Text: commentEntity.Text,
+		PNModel: PNModel{
+			PN:            commentEntity.PNModel.PN,
+			PositiveRatio: commentEntity.PNModel.PositiveRatio,
+			NegativeRatio: commentEntity.PNModel.NegativeRatio,
+		},
 	}
 }
 
