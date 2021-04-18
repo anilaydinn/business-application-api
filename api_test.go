@@ -358,6 +358,77 @@ func TestAnalyzeText(t *testing.T) {
 	})
 }
 
+func TestGetProducts(t *testing.T) {
+
+	Convey("Given products", t, func() {
+		repository := GetCleanTestRepository()
+		service := NewService(repository, nil, nil)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		comment1 := Comment{
+			ID:   "123",
+			Text: "Test comment1",
+		}
+
+		comment2 := Comment{
+			ID:   "456",
+			Text: "Test comment2",
+		}
+
+		comment3 := Comment{
+			ID:   "789",
+			Text: "Test comment3",
+		}
+
+		product1 := Product{
+			ID:    GenerateUUID(8),
+			Name:  "product1",
+			Price: 50.0,
+			CommentIDList: []string{
+				"123",
+				"456",
+			},
+		}
+
+		product2 := Product{
+			ID:    GenerateUUID(8),
+			Name:  "product2",
+			Price: 100.0,
+			CommentIDList: []string{
+				"789",
+			},
+		}
+
+		repository.AddComment(comment1)
+		repository.AddComment(comment2)
+		repository.AddComment(comment3)
+		repository.AddProduct(product1)
+		repository.AddProduct(product2)
+
+		Convey("When get products request sent", func() {
+			req, _ := http.NewRequest(http.MethodGet, "/products", nil)
+
+			resp, err := app.Test(req)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 200", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusOK)
+			})
+
+			Convey("Then all products should return", func() {
+				actualResult := []Product{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult, ShouldHaveLength, 2)
+			})
+		})
+	})
+}
+
 func GetCleanTestRepository() *Repository {
 
 	repository := NewRepository()

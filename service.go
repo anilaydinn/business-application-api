@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -12,10 +11,12 @@ import (
 	"github.com/navossoc/bayesian"
 )
 
-type Service struct {
-	repository          *Repository
-	positiveReviewWords []string
-	negativeReviewWords []string
+type Product struct {
+	ID            string    `json:"id"`
+	Name          string    `json:"name"`
+	Price         float64   `json:"price"`
+	Comments      []Comment `json:"comments"`
+	CommentIDList []string  `json:"-"`
 }
 
 type Comment struct {
@@ -35,12 +36,19 @@ type reviewData struct {
 	class   string
 }
 
+type Service struct {
+	repository          *Repository
+	positiveReviewWords []string
+	negativeReviewWords []string
+}
+
 const (
 	positive bayesian.Class = "positive"
 	negative bayesian.Class = "negative"
 )
 
 var CommentNotFoundError error = errors.New("Comment not found!")
+var ProductNotFoundError error = errors.New("Product not found!")
 
 func NewService(repository *Repository, positiveReviewWords []string, negativeReviewWords []string) Service {
 	return Service{
@@ -131,11 +139,7 @@ func (service *Service) AnalyzeText(text string) (Comment, error) {
 
 	sentenceWords := preProcessSentence(text)
 
-	fmt.Println(classifier.ProbScores(sentenceWords))
-
 	_, result, _ := classifier.ProbScores(sentenceWords)
-
-	fmt.Println(classifier.ProbScores(sentenceWords))
 
 	ratios, _, _ := classifier.ProbScores(sentenceWords)
 

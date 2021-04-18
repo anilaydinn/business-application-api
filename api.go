@@ -129,3 +129,9 @@ func (api *API) AnalyzeTextHandler(c *fiber.Ctx) error {
 	return nil
 
 }
+
+func (api *API) GetProductsHandler(c *fiber.Ctx) error {
+
+	c.Status(fiber.StatusOK)
+	return nil
+}

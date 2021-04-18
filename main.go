@@ -61,11 +61,14 @@ func SetupApp(api *API) *fiber.App {
 	app := fiber.New()
 
 	app.Post("/analyze", api.AnalyzeTextHandler)
+
 	app.Post("/comments", api.AddCommentHandler)
 	app.Get("/comments", api.GetCommentsHandler)
 	app.Get("/comments/:id", api.GetCommentHandler)
 	app.Delete("/comments/:id", api.DeleteCommentHandler)
 	app.Patch("/comments/:id", api.UpdateCommentHandler)
+
+	app.Get("/products", api.GetProductsHandler)
 
 	return app
 }

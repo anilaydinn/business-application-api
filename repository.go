@@ -10,6 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type ProductEntity struct {
+	ID       string   `bson:"id"`
+	Name     string   `bson:"name"`
+	Price    float64  `bson:"price"`
+	Comments []string `bson:"comments"`
+}
+
 type CommentEntity struct {
 	ID      string  `bson:"id"`
 	Text    string  `bson:"text"`
@@ -136,6 +143,49 @@ func (repository *Repository) UpdateComment(comment *Comment) (*Comment, error) 
 	return repository.GetComment(commentEntity.ID)
 }
 
+func (repository *Repository) AddProduct(product Product) (*Product, error) {
+	collection := repository.client.Database("business").Collection("products")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	productEntity := convertProductModelToProductEntity(product)
+
+	_, err := collection.InsertOne(ctx, productEntity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return repository.GetProduct(productEntity.ID)
+}
+
+func (repository *Repository) GetProduct(productID string) (*Product, error) {
+	collection := repository.client.Database("business").Collection("products")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cur := collection.FindOne(ctx, bson.M{"id": productID})
+
+	if cur.Err() != nil {
+		return nil, cur.Err()
+	}
+
+	if cur == nil {
+		return nil, ProductNotFoundError
+	}
+
+	productEntity := ProductEntity{}
+	err := cur.Decode(&productEntity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	product := convertProductEntityToProductModel(productEntity)
+
+	return &product, nil
+}
+
 func convertCommentModelToEntity(comment *Comment) CommentEntity {
 	return CommentEntity{
 		ID:   comment.ID,
@@ -166,4 +216,22 @@ func convertCommentEntitiesToCommentModels(commentEntities []CommentEntity) []Co
 		comments = append(comments, convertCommentEntityToModel(commentEntity))
 	}
 	return comments
+}
+
+func convertProductModelToProductEntity(product Product) ProductEntity {
+	return ProductEntity{
+		ID:       product.ID,
+		Name:     product.Name,
+		Price:    product.Price,
+		Comments: product.CommentIDList,
+	}
+}
+
+func convertProductEntityToProductModel(productEntity ProductEntity) Product {
+	return Product{
+		ID:            productEntity.ID,
+		Name:          productEntity.Name,
+		Price:         productEntity.Price,
+		CommentIDList: productEntity.Comments,
+	}
 }
