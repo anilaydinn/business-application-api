@@ -129,6 +129,25 @@ func (service *Service) UpdateComment(commentID, text string) (*Comment, error) 
 
 }
 
+func (service *Service) GetProducts() ([]Product, error) {
+
+	products, err := service.repository.GetProducts()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for i, product := range products {
+		comments, err := service.repository.GetCommentsByIDList(product.CommentIDList)
+		if err != nil {
+			return nil, err
+		}
+		products[i].Comments = comments
+	}
+
+	return products, nil
+}
+
 func (service *Service) AnalyzeText(text string) (Comment, error) {
 
 	classifier := bayesian.NewClassifier(positive, negative) //classları belirleme

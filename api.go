@@ -132,6 +132,16 @@ func (api *API) AnalyzeTextHandler(c *fiber.Ctx) error {
 
 func (api *API) GetProductsHandler(c *fiber.Ctx) error {
 
-	c.Status(fiber.StatusOK)
+	products, err := api.service.GetProducts()
+
+	switch err {
+	case nil:
+		c.JSON(products)
+		c.Status(fiber.StatusOK)
+	case ProductNotFoundError:
+		c.Status(fiber.StatusBadRequest)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
 	return nil
 }

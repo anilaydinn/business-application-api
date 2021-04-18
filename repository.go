@@ -186,6 +186,60 @@ func (repository *Repository) GetProduct(productID string) (*Product, error) {
 	return &product, nil
 }
 
+func (repository *Repository) GetProducts() ([]Product, error) {
+	collection := repository.client.Database("business").Collection("products")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cur, err := collection.Find(ctx, bson.M{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	products := []Product{}
+	for cur.Next(ctx) {
+		productEntity := ProductEntity{}
+		err := cur.Decode(&productEntity)
+		if err != nil {
+			return nil, err
+		}
+		products = append(products, convertProductEntityToProductModel(productEntity))
+	}
+
+	return products, nil
+}
+
+func (repository *Repository) GetCommentsByIDList(commentIDList []string) ([]Comment, error) {
+	collection := repository.client.Database("business").Collection("comments")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{
+		"id": bson.M{
+			"$in": commentIDList,
+		},
+	}
+
+	cur, err := collection.Find(ctx, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	comments := []Comment{}
+	for cur.Next(ctx) {
+		commentEntity := CommentEntity{}
+		err := cur.Decode(&commentEntity)
+		if err != nil {
+			return nil, err
+		}
+		comments = append(comments, convertCommentEntityToModel(commentEntity))
+	}
+
+	return comments, nil
+}
+
 func convertCommentModelToEntity(comment *Comment) CommentEntity {
 	return CommentEntity{
 		ID:   comment.ID,
