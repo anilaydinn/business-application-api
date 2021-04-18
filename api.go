@@ -138,10 +138,27 @@ func (api *API) GetProductsHandler(c *fiber.Ctx) error {
 	case nil:
 		c.JSON(products)
 		c.Status(fiber.StatusOK)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
+}
+
+func (api *API) GetProductHandler(c *fiber.Ctx) error {
+
+	productID := c.Params("id")
+
+	product, err := api.service.GetProduct(productID)
+
+	switch err {
+	case nil:
+		c.JSON(product)
+		c.Status(fiber.StatusOK)
 	case ProductNotFoundError:
 		c.Status(fiber.StatusBadRequest)
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}
 	return nil
+
 }

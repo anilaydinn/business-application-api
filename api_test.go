@@ -410,7 +410,7 @@ func TestGetProducts(t *testing.T) {
 		Convey("When get products request sent", func() {
 			req, _ := http.NewRequest(http.MethodGet, "/products", nil)
 
-			resp, err := app.Test(req)
+			resp, err := app.Test(req, 30000)
 			So(err, ShouldBeNil)
 
 			Convey("Then status code should be 200", func() {
@@ -438,6 +438,53 @@ func TestGetProducts(t *testing.T) {
 				So(actualResult[1].Comments, ShouldHaveLength, 1)
 				So(actualResult[1].Comments[0].ID, ShouldEqual, comment3.ID)
 				So(actualResult[1].Comments[0].Text, ShouldEqual, comment3.Text)
+			})
+		})
+	})
+}
+
+func TestGetProduct(t *testing.T) {
+	Convey("Given a product", t, func() {
+		repository := GetCleanTestRepository()
+		service := NewService(repository, nil, nil)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		product1 := Product{
+			ID:    GenerateUUID(8),
+			Name:  "Test Product1",
+			Price: 10.0,
+		}
+
+		product2 := Product{
+			ID:    GenerateUUID(8),
+			Name:  "Test Product2",
+			Price: 15.0,
+		}
+
+		repository.AddProduct(product1)
+		repository.AddProduct(product2)
+
+		Convey("When the get product request sent with id params", func() {
+			req, _ := http.NewRequest(http.MethodGet, "/products/"+product2.ID, nil)
+
+			resp, err := app.Test(req, 30000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 200", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusOK)
+			})
+
+			Convey("Then requested product should return", func() {
+				actualResult := Product{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult.ID, ShouldEqual, product2.ID)
+				So(actualResult.Name, ShouldEqual, product2.Name)
+				So(actualResult.Price, ShouldEqual, product2.Price)
 			})
 		})
 	})
