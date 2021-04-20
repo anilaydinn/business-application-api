@@ -68,7 +68,9 @@ func SetupApp(api *API) *fiber.App {
 	app.Delete("/comments/:id", api.DeleteCommentHandler)
 	app.Patch("/comments/:id", api.UpdateCommentHandler)
 
+	app.Post("/products", api.AddProductHandler)
 	app.Get("/products", api.GetProductsHandler)
+
 	app.Get("/products/:id", api.GetProductHandler)
 
 	return app

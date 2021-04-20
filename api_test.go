@@ -490,6 +490,49 @@ func TestGetProduct(t *testing.T) {
 	})
 }
 
+func TestAddProduct(t *testing.T) {
+	Convey("Given a valid product", t, func() {
+		repository := GetCleanTestRepository()
+		service := NewService(repository, nil, nil)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		Convey("When the new product request sent with product data", func() {
+
+			productDTO := ProductDTO{
+				Name:  "New Product Name",
+				Price: 11.0,
+			}
+
+			reqBody, err := json.Marshal(productDTO)
+			So(err, ShouldBeNil)
+
+			req, _ := http.NewRequest(http.MethodPost, "/products", bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+			resp, err := app.Test(req)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 201", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusCreated)
+			})
+
+			Convey("Then created product should return", func() {
+				actualResult := Product{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult.ID, ShouldNotBeNil)
+				So(actualResult.Name, ShouldEqual, productDTO.Name)
+				So(actualResult.Price, ShouldEqual, productDTO.Price)
+			})
+		})
+	})
+}
+
 func GetCleanTestRepository() *Repository {
 
 	repository := NewRepository()

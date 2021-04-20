@@ -4,6 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type ProductDTO struct {
+	Name  string  `json:"name"`
+	Price float64 `json:"price"`
+}
+
 type CommentDTO struct {
 	Text string `json:"text"`
 }
@@ -160,5 +165,25 @@ func (api *API) GetProductHandler(c *fiber.Ctx) error {
 		c.Status(fiber.StatusInternalServerError)
 	}
 	return nil
+}
 
+func (api *API) AddProductHandler(c *fiber.Ctx) error {
+
+	productDTO := ProductDTO{}
+	err := c.BodyParser(&productDTO)
+
+	if err != nil {
+		c.Status(fiber.StatusBadRequest)
+	}
+
+	product, err := api.service.AddProduct(productDTO)
+
+	switch err {
+	case nil:
+		c.JSON(product)
+		c.Status(fiber.StatusCreated)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
 }

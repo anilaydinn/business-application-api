@@ -159,6 +159,23 @@ func (service *Service) GetProduct(productID string) (*Product, error) {
 	return product, nil
 }
 
+func (service *Service) AddProduct(productDTO ProductDTO) (*Product, error) {
+
+	product := &Product{
+		ID:    GenerateUUID(8),
+		Name:  productDTO.Name,
+		Price: productDTO.Price,
+	}
+
+	product, err := service.repository.AddProduct(*product)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
+}
+
 func (service *Service) AnalyzeText(text string) (Comment, error) {
 
 	classifier := bayesian.NewClassifier(positive, negative) //classları belirleme
