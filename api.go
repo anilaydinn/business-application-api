@@ -187,3 +187,25 @@ func (api *API) AddProductHandler(c *fiber.Ctx) error {
 	}
 	return nil
 }
+
+func (api *API) UpdateProductHandler(c *fiber.Ctx) error {
+
+	productID := c.Params("id")
+	productDTO := ProductDTO{}
+	err := c.BodyParser(&productDTO)
+
+	if err != nil {
+		c.Status(fiber.StatusBadRequest)
+	}
+
+	product, err := api.service.UpdateProduct(productID, productDTO)
+
+	switch err {
+	case nil:
+		c.JSON(product)
+		c.Status(fiber.StatusCreated)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
+}

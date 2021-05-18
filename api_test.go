@@ -533,6 +533,56 @@ func TestAddProduct(t *testing.T) {
 	})
 }
 
+func TestUpdateProduct(t *testing.T) {
+	Convey("Given a product", t, func() {
+		repository := GetCleanTestRepository()
+		service := NewService(repository, nil, nil)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		product := Product{
+			ID:    GenerateUUID(8),
+			Name:  "Test Product Name",
+			Price: 99.90,
+		}
+		repository.AddProduct(product)
+
+		Convey("When the update product request sent with new product data", func() {
+
+			productDTO := ProductDTO{
+				Name:  "Test New Product Name",
+				Price: 50.00,
+			}
+
+			reqBody, err := json.Marshal(productDTO)
+			So(err, ShouldBeNil)
+
+			req, _ := http.NewRequest(http.MethodPatch, "/products/"+product.ID, bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+			resp, err := app.Test(req, 300000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 200", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusOK)
+			})
+
+			Convey("Then updated product should return", func() {
+				actualResult := Product{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult.ID, ShouldEqual, product.ID)
+				So(actualResult.Name, ShouldEqual, productDTO.Name)
+				So(actualResult.Price, ShouldEqual, productDTO.Price)
+			})
+		})
+	})
+}
+
 func GetCleanTestRepository() *Repository {
 
 	repository := NewRepository()

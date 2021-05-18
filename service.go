@@ -176,6 +176,25 @@ func (service *Service) AddProduct(productDTO ProductDTO) (*Product, error) {
 	return product, nil
 }
 
+func (service *Service) UpdateProduct(productID string, productDTO ProductDTO) (*Product, error) {
+	existingProduct, err := service.repository.GetProduct(productID)
+
+	if err != nil {
+		return nil, ProductNotFoundError
+	}
+
+	existingProduct.Name = productDTO.Name
+	existingProduct.Price = productDTO.Price
+
+	_, err = service.repository.UpdateProduct(*existingProduct)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return service.GetProduct(productID)
+}
+
 func (service *Service) AnalyzeText(text string) (Comment, error) {
 
 	classifier := bayesian.NewClassifier(positive, negative) //classları belirleme

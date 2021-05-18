@@ -240,6 +240,22 @@ func (repository *Repository) GetCommentsByIDList(commentIDList []string) ([]Com
 	return comments, nil
 }
 
+func (repository *Repository) UpdateProduct(product Product) (*Product, error) {
+	collection := repository.client.Database("business").Collection("products")
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
+	productEntity := convertProductModelToProductEntity(product)
+
+	result := collection.FindOneAndUpdate(ctx, bson.M{"id": product.ID}, productEntity)
+
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+
+	return repository.GetProduct(product.ID)
+}
+
 func convertCommentModelToEntity(comment *Comment) CommentEntity {
 	return CommentEntity{
 		ID:   comment.ID,
