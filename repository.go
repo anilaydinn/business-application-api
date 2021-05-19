@@ -23,12 +23,17 @@ type CommentEntity struct {
 	PNModel PNModel `bson:"pnModel"`
 }
 
+type reviewDataEntity struct {
+	comment string `bson:"comment"`
+	class   string `bson:"class"`
+}
+
 type Repository struct {
 	client *mongo.Client
 }
 
 func NewRepository() *Repository {
-	uri := "mongodb://localhost:27017"
+	uri := "mongodb+srv://admin:XixQfYeo7huO9VkT@cluster0.ljcyz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
@@ -256,6 +261,30 @@ func (repository *Repository) UpdateProduct(product Product) (*Product, error) {
 	return repository.GetProduct(product.ID)
 }
 
+func (repository *Repository) GetReviewsData() ([]ReviewData, error) {
+	collection := repository.client.Database("test").Collection("reviews")
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
+	cur, err := collection.Find(ctx, bson.M{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	reviews := []ReviewData{}
+	for cur.Next(ctx) {
+		reviewDataEntity := reviewDataEntity{}
+		err := cur.Decode(&reviewDataEntity)
+		if err != nil {
+			return nil, err
+		}
+		reviews = append(reviews, convertReviewDataEntityToReviewData(reviewDataEntity))
+	}
+
+	return reviews, nil
+}
+
 func convertCommentModelToEntity(comment *Comment) CommentEntity {
 	return CommentEntity{
 		ID:   comment.ID,
@@ -303,5 +332,12 @@ func convertProductEntityToProductModel(productEntity ProductEntity) Product {
 		Name:          productEntity.Name,
 		Price:         productEntity.Price,
 		CommentIDList: productEntity.Comments,
+	}
+}
+
+func convertReviewDataEntityToReviewData(reviewDataEntity reviewDataEntity) ReviewData {
+	return ReviewData{
+		Comment: reviewDataEntity.comment,
+		Class:   reviewDataEntity.class,
 	}
 }

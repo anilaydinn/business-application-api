@@ -31,9 +31,9 @@ type PNModel struct {
 	NegativeRatio float64 `json:"negativeRatio"`
 }
 
-type reviewData struct {
-	comment string
-	class   string
+type ReviewData struct {
+	Comment string `json:"comment"`
+	Class   string `json:"class"`
 }
 
 type Service struct {

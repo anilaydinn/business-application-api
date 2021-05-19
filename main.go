@@ -1,35 +1,22 @@
 package main
 
 import (
-	"encoding/csv"
-	"fmt"
-	"os"
-
 	"github.com/gofiber/fiber/v2"
 )
 
 func main() {
+	repository := NewRepository()
 
-	csvfile, err := os.Open("data/IMDBDataset.csv") //dosyayı al
-
-	if err != nil {
-		fmt.Println("csv açılamadi")
-	}
-
-	defer csvfile.Close() //program sonunda dosyayı kapa
-
-	csvLines, err := csv.NewReader(csvfile).ReadAll() //dosyayı oku
+	reviews, err := repository.GetReviewsData()
 
 	if err != nil {
-		fmt.Println(err)
+		return
 	}
 
-	reviews := []reviewData{}
-
-	for _, line := range csvLines {
-		reviews = append(reviews, reviewData{
-			comment: line[0],
-			class:   line[1], //'1'. sutun
+	for _, line := range reviews {
+		reviews = append(reviews, ReviewData{
+			Comment: line.Comment,
+			Class:   line.Class, //'1'. sutun
 		})
 	}
 
@@ -37,18 +24,17 @@ func main() {
 	negativeReview := []string{}
 
 	for _, item := range reviews { //sadece reviewleri alma ve ayırma
-		if item.class == "positive" {
-			positiveReview = append(positiveReview, item.comment)
+		if item.Class == "positive" {
+			positiveReview = append(positiveReview, item.Comment)
 		}
-		if item.class == "negative" {
-			negativeReview = append(negativeReview, item.comment)
+		if item.Class == "negative" {
+			negativeReview = append(negativeReview, item.Comment)
 		}
 	}
 	positiveReviewWords := preProcessReviews(positiveReview)
 
 	negativeReviewWords := preProcessReviews(negativeReview)
 
-	repository := NewRepository()
 	service := NewService(repository, positiveReviewWords, negativeReviewWords)
 	api := NewAPI(&service)
 

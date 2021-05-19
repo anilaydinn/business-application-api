@@ -133,12 +133,12 @@ func TestAddComment(t *testing.T) {
 			fmt.Println(err)
 		}
 
-		reviews := []reviewData{}
+		reviews := []ReviewData{}
 
 		for _, line := range csvLines {
-			reviews = append(reviews, reviewData{
-				comment: line[0],
-				class:   line[1], //'1'. sutun
+			reviews = append(reviews, ReviewData{
+				Comment: line[0],
+				Class:   line[1], //'1'. sutun
 			})
 		}
 
@@ -146,11 +146,11 @@ func TestAddComment(t *testing.T) {
 		negativeReview := []string{}
 
 		for _, item := range reviews { //sadece reviewleri alma ve ayırma
-			if item.class == "positive" {
-				positiveReview = append(positiveReview, item.comment)
+			if item.Class == "positive" {
+				positiveReview = append(positiveReview, item.Comment)
 			}
-			if item.class == "negative" {
-				negativeReview = append(negativeReview, item.comment)
+			if item.Class == "negative" {
+				negativeReview = append(negativeReview, item.Comment)
 			}
 		}
 		positiveReviewWords := preProcessReviews(positiveReview)
@@ -295,12 +295,12 @@ func TestAnalyzeText(t *testing.T) {
 			fmt.Println(err)
 		}
 
-		reviews := []reviewData{}
+		reviews := []ReviewData{}
 
 		for _, line := range csvLines {
-			reviews = append(reviews, reviewData{
-				comment: line[0],
-				class:   line[1], //'1'. sutun
+			reviews = append(reviews, ReviewData{
+				Comment: line[0],
+				Class:   line[1], //'1'. sutun
 			})
 		}
 
@@ -308,11 +308,11 @@ func TestAnalyzeText(t *testing.T) {
 		negativeReview := []string{}
 
 		for _, item := range reviews { //sadece reviewleri alma ve ayırma
-			if item.class == "positive" {
-				positiveReview = append(positiveReview, item.comment)
+			if item.Class == "positive" {
+				positiveReview = append(positiveReview, item.Comment)
 			}
-			if item.class == "negative" {
-				negativeReview = append(negativeReview, item.comment)
+			if item.Class == "negative" {
+				negativeReview = append(negativeReview, item.Comment)
 			}
 		}
 		positiveReviewWords := preProcessReviews(positiveReview)
