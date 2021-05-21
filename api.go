@@ -4,6 +4,11 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type UserDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type ProductDTO struct {
 	Name  string  `json:"name"`
 	Price float64 `json:"price"`
@@ -203,6 +208,27 @@ func (api *API) UpdateProductHandler(c *fiber.Ctx) error {
 	switch err {
 	case nil:
 		c.JSON(product)
+		c.Status(fiber.StatusOK)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
+}
+
+func (api *API) CreateUserHandler(c *fiber.Ctx) error {
+
+	userDTO := UserDTO{}
+	err := c.BodyParser(&userDTO)
+
+	if err != nil {
+		c.Status(fiber.StatusBadRequest)
+	}
+
+	user, err := api.service.CreateUser(userDTO)
+
+	switch err {
+	case nil:
+		c.JSON(user)
 		c.Status(fiber.StatusCreated)
 	default:
 		c.Status(fiber.StatusInternalServerError)

@@ -10,6 +10,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type UserEntity struct {
+	ID       string `bson:"id"`
+	Username string `bson:"username"`
+	Password string `bson:"-"`
+}
+
 type ProductEntity struct {
 	ID       string   `bson:"id"`
 	Name     string   `bson:"name"`
@@ -36,6 +42,20 @@ func NewRepository() *Repository {
 	uri := "mongodb+srv://admin:XixQfYeo7huO9VkT@cluster0.ljcyz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	defer cancel()
+	client.Connect(ctx)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &Repository{client}
+}
+
+func NewTestRepository() *Repository {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
 
 	defer cancel()
 	client.Connect(ctx)
@@ -252,13 +272,56 @@ func (repository *Repository) UpdateProduct(product Product) (*Product, error) {
 
 	productEntity := convertProductModelToProductEntity(product)
 
-	result := collection.FindOneAndUpdate(ctx, bson.M{"id": product.ID}, productEntity)
+	result := collection.FindOneAndReplace(ctx, bson.M{"id": product.ID}, productEntity)
 
 	if result.Err() != nil {
 		return nil, result.Err()
 	}
 
 	return repository.GetProduct(product.ID)
+}
+
+func (repository *Repository) CreateUser(user User) (*User, error) {
+	collection := repository.client.Database("business").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
+	userEntity := convertUserModelToUserEntity(user)
+
+	_, err := collection.InsertOne(ctx, userEntity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return repository.GetUser(userEntity.ID)
+}
+
+func (repository *Repository) GetUser(userID string) (*User, error) {
+	collection := repository.client.Database("business").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
+	cur := collection.FindOne(ctx, bson.M{"id": userID})
+
+	if cur.Err() != nil {
+		return nil, cur.Err()
+	}
+
+	if cur == nil {
+		return nil, UserNotFoundError
+	}
+
+	userEntity := UserEntity{}
+	err := cur.Decode(&userEntity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := convertUserEntityToUserModel(userEntity)
+
+	return &user, nil
 }
 
 func (repository *Repository) GetReviewsData() ([]ReviewData, error) {
@@ -339,5 +402,21 @@ func convertReviewDataEntityToReviewData(reviewDataEntity reviewDataEntity) Revi
 	return ReviewData{
 		Comment: reviewDataEntity.comment,
 		Class:   reviewDataEntity.class,
+	}
+}
+
+func convertUserModelToUserEntity(user User) UserEntity {
+	return UserEntity{
+		ID:       user.ID,
+		Username: user.Username,
+		Password: user.Password,
+	}
+}
+
+func convertUserEntityToUserModel(userEntity UserEntity) User {
+	return User{
+		ID:       userEntity.ID,
+		Username: userEntity.Username,
+		Password: userEntity.Password,
 	}
 }

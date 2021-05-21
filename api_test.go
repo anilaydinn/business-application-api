@@ -185,7 +185,7 @@ func TestAddComment(t *testing.T) {
 				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
 				actualResult := Comment{}
 				err := json.Unmarshal(actualResponseBody, &actualResult)
-				fmt.Println(err)
+
 				So(err, ShouldBeNil)
 				So(actualResult.ID, ShouldNotBeNil)
 				So(actualResult.Text, ShouldEqual, commentDTO.Text)
@@ -583,9 +583,51 @@ func TestUpdateProduct(t *testing.T) {
 	})
 }
 
+func TestCreateUser(t *testing.T) {
+	Convey("Given a valid user details", t, func() {
+		repository := GetCleanTestRepository()
+		service := NewService(repository, nil, nil)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		Convey("When the new user request sent with user data", func() {
+
+			userDTO := UserDTO{
+				Username: "thracian",
+				Password: "123123",
+			}
+
+			reqBody, err := json.Marshal(userDTO)
+			So(err, ShouldBeNil)
+
+			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+			resp, err := app.Test(req, 300000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 201", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusCreated)
+			})
+
+			Convey("Then created user should return", func() {
+				actualResult := User{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult.ID, ShouldNotBeNil)
+				So(actualResult.Username, ShouldEqual, userDTO.Username)
+			})
+		})
+	})
+}
+
 func GetCleanTestRepository() *Repository {
 
-	repository := NewRepository()
+	repository := NewTestRepository()
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	businessDB := repository.client.Database("business")

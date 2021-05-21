@@ -9,7 +9,14 @@ import (
 	"github.com/euskadi31/go-tokenizer"
 	"github.com/google/uuid"
 	"github.com/navossoc/bayesian"
+	"golang.org/x/crypto/bcrypt"
 )
+
+type User struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Password string `json:"-"`
+}
 
 type Product struct {
 	ID            string    `json:"id"`
@@ -49,6 +56,7 @@ const (
 
 var CommentNotFoundError error = errors.New("Comment not found!")
 var ProductNotFoundError error = errors.New("Product not found!")
+var UserNotFoundError error = errors.New("User not found!")
 
 func NewService(repository *Repository, positiveReviewWords []string, negativeReviewWords []string) Service {
 	return Service{
@@ -193,6 +201,29 @@ func (service *Service) UpdateProduct(productID string, productDTO ProductDTO) (
 	}
 
 	return service.GetProduct(productID)
+}
+
+func (service *Service) CreateUser(userDTO UserDTO) (*User, error) {
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userDTO.Password), bcrypt.DefaultCost)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := User{
+		ID:       GenerateUUID(8),
+		Username: userDTO.Username,
+		Password: string(hashedPassword),
+	}
+
+	newUser, err := service.repository.CreateUser(user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return newUser, nil
 }
 
 func (service *Service) AnalyzeText(text string) (Comment, error) {

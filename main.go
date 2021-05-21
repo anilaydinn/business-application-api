@@ -59,5 +59,7 @@ func SetupApp(api *API) *fiber.App {
 	app.Get("/products/:id", api.GetProductHandler)
 	app.Patch("/products/:id", api.UpdateProductHandler)
 
+	app.Post("/users", api.CreateUserHandler)
+
 	return app
 }
