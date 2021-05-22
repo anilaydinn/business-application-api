@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 )
 
 func main() {
@@ -46,6 +47,10 @@ func main() {
 func SetupApp(api *API) *fiber.App {
 	app := fiber.New()
 
+	app.Use(cors.New(cors.Config{
+		AllowCredentials: true,
+	}))
+
 	app.Post("/analyze", api.AnalyzeTextHandler)
 
 	app.Post("/comments", api.AddCommentHandler)
@@ -61,6 +66,7 @@ func SetupApp(api *API) *fiber.App {
 	app.Patch("/products/:id/comments", api.AddProductCommentHandler)
 
 	app.Post("/users", api.CreateUserHandler)
+	app.Post("/users/login", api.LoginHandler)
 
 	return app
 }

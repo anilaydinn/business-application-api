@@ -4,13 +4,20 @@ import (
 	"errors"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/bbalet/stopwords"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/euskadi31/go-tokenizer"
+	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/navossoc/bayesian"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type Token struct {
+	Token string `json:"token"`
+}
 
 type User struct {
 	ID       string `json:"id"`
@@ -59,6 +66,9 @@ var CommentNotFoundError error = errors.New("Comment not found!")
 var ProductNotFoundError error = errors.New("Product not found!")
 var UserNotFoundError error = errors.New("User not found!")
 var UserAlreadyRegisteredError error = errors.New("User already registered!")
+var WrongPasswordError error = errors.New("Wrong password!")
+
+const SecretKey = "14465375-b4a8-47fa-9692-c986d4a825ee"
 
 func NewService(repository *Repository, positiveReviewWords []string, negativeReviewWords []string) Service {
 	return Service{
@@ -264,6 +274,45 @@ func (service *Service) AddProductComment(productID string, commentDTO CommentDT
 	}
 
 	return product, nil
+}
+
+func (service *Service) Login(userCredentials UserCredentialsDTO) (*Token, *fiber.Cookie, error) {
+
+	user, err := service.repository.GetUserByUsername(userCredentials.Username)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	if user == nil {
+		return nil, nil, UserNotFoundError
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userCredentials.Password)); err != nil {
+		return nil, nil, WrongPasswordError
+	}
+
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Issuer:    user.ID,
+		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	})
+
+	token, err := claims.SignedString([]byte(SecretKey))
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	cookie := fiber.Cookie{
+		Name:     "user-token",
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 24),
+		HTTPOnly: true,
+	}
+
+	return &Token{
+		Token: token,
+	}, &cookie, nil
 }
 
 func (service *Service) AnalyzeText(text string) (Comment, error) {

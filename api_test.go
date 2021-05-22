@@ -750,6 +750,55 @@ func TestAddCommentProduct(t *testing.T) {
 
 }
 
+func TestUserLogin(t *testing.T) {
+	Convey("Given a registered user", t, func() {
+		repository := GetCleanTestRepository()
+		service := NewService(repository, nil, nil)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		user := User{
+			ID:       GenerateUUID(8),
+			Username: "test",
+			Password: "$2a$10$xknCQfdvbnX9H7Tk7vvsQeiOKB0OnnySLUw/CyzICymcX0iHgRi3q",
+		}
+		repository.CreateUser(user)
+
+		Convey("When user login request sent with user credentials", func() {
+
+			userCredentialsDTO := UserCredentialsDTO{
+				Username: "test",
+				Password: "123",
+			}
+
+			reqBody, err := json.Marshal(userCredentialsDTO)
+			So(err, ShouldBeNil)
+
+			req, _ := http.NewRequest(http.MethodPost, "/users/login", bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+			resp, err := app.Test(req, 300000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 200", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusOK)
+			})
+
+			Convey("Then user token should returned", func() {
+				actualResult := Token{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+				So(err, ShouldBeNil)
+
+				So(actualResult.Token, ShouldNotBeNil)
+				So(len(actualResult.Token), ShouldBeGreaterThan, 0)
+			})
+		})
+	})
+}
+
 func GetCleanTestRepository() *Repository {
 
 	repository := NewTestRepository()

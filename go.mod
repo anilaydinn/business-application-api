@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/bbalet/stopwords v1.0.0
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/euskadi31/go-tokenizer v1.0.0
 	github.com/gofiber/fiber/v2 v2.6.0
 	github.com/google/uuid v1.2.0

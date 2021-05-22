@@ -4,6 +4,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+type UserCredentialsDTO struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 type UserDTO struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -255,6 +259,31 @@ func (api *API) AddProductCommentHandler(c *fiber.Ctx) error {
 	case nil:
 		c.JSON(product)
 		c.Status(fiber.StatusCreated)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
+}
+
+func (api *API) LoginHandler(c *fiber.Ctx) error {
+	userCredentials := UserCredentialsDTO{}
+	err := c.BodyParser(&userCredentials)
+
+	if err != nil {
+		c.Status(fiber.StatusBadRequest)
+	}
+
+	token, cookie, err := api.service.Login(userCredentials)
+
+	switch err {
+	case nil:
+		c.JSON(token)
+		c.Cookie(cookie)
+		c.Status(fiber.StatusOK)
+	case UserNotFoundError:
+		c.Status(fiber.StatusNotFound)
+	case WrongPasswordError:
+		c.Status(fiber.StatusBadRequest)
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}
