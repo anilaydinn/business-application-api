@@ -10,8 +10,9 @@ type UserDTO struct {
 }
 
 type ProductDTO struct {
-	Name  string  `json:"name"`
-	Price float64 `json:"price"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Price       float64 `json:"price"`
 }
 
 type CommentDTO struct {
@@ -232,6 +233,28 @@ func (api *API) CreateUserHandler(c *fiber.Ctx) error {
 		c.Status(fiber.StatusCreated)
 	case UserAlreadyRegisteredError:
 		c.Status(fiber.StatusBadRequest)
+	default:
+		c.Status(fiber.StatusInternalServerError)
+	}
+	return nil
+}
+
+func (api *API) AddProductCommentHandler(c *fiber.Ctx) error {
+
+	productID := c.Params("id")
+	commentDTO := CommentDTO{}
+	err := c.BodyParser(&commentDTO)
+
+	if err != nil {
+		c.Status(fiber.StatusBadRequest)
+	}
+
+	product, err := api.service.AddProductComment(productID, commentDTO)
+
+	switch err {
+	case nil:
+		c.JSON(product)
+		c.Status(fiber.StatusCreated)
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}

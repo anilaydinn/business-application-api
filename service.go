@@ -22,6 +22,7 @@ type Product struct {
 	ID            string    `json:"id"`
 	Name          string    `json:"name"`
 	Price         float64   `json:"price"`
+	Description   string    `json:"description"`
 	Comments      []Comment `json:"comments"`
 	CommentIDList []string  `json:"-"`
 }
@@ -171,9 +172,10 @@ func (service *Service) GetProduct(productID string) (*Product, error) {
 func (service *Service) AddProduct(productDTO ProductDTO) (*Product, error) {
 
 	product := &Product{
-		ID:    GenerateUUID(8),
-		Name:  productDTO.Name,
-		Price: productDTO.Price,
+		ID:          GenerateUUID(8),
+		Name:        productDTO.Name,
+		Description: productDTO.Description,
+		Price:       productDTO.Price,
 	}
 
 	product, err := service.repository.AddProduct(*product)
@@ -231,6 +233,37 @@ func (service *Service) CreateUser(userDTO UserDTO) (*User, error) {
 	}
 
 	return newUser, nil
+}
+
+func (service *Service) AddProductComment(productID string, commentDTO CommentDTO) (*Product, error) {
+
+	comment, err := service.AddComment(commentDTO.Text)
+
+	if err != nil {
+		return nil, err
+	}
+
+	product, err := service.GetProduct(productID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	product.CommentIDList = append(product.CommentIDList, comment.ID)
+
+	product, err = service.repository.UpdateProduct(*product)
+
+	if err != nil {
+		return nil, err
+	}
+
+	product.Comments, err = service.repository.GetCommentsByIDList(product.CommentIDList)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return product, nil
 }
 
 func (service *Service) AnalyzeText(text string) (Comment, error) {

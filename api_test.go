@@ -501,8 +501,9 @@ func TestAddProduct(t *testing.T) {
 		Convey("When the new product request sent with product data", func() {
 
 			productDTO := ProductDTO{
-				Name:  "New Product Name",
-				Price: 11.0,
+				Name:        "New Product Name",
+				Description: "This is product description",
+				Price:       11.0,
 			}
 
 			reqBody, err := json.Marshal(productDTO)
@@ -527,6 +528,7 @@ func TestAddProduct(t *testing.T) {
 
 				So(actualResult.ID, ShouldNotBeNil)
 				So(actualResult.Name, ShouldEqual, productDTO.Name)
+				So(actualResult.Description, ShouldEqual, productDTO.Description)
 				So(actualResult.Price, ShouldEqual, productDTO.Price)
 			})
 		})
@@ -652,6 +654,100 @@ func TestCreateUser(t *testing.T) {
 		})
 
 	})
+}
+
+func TestAddCommentProduct(t *testing.T) {
+	Convey("Given a product with doesn't have comments", t, func() {
+		repository := GetCleanTestRepository()
+
+		csvfile, err := os.Open("data/IMDBDataset.csv") //dosyayı al
+
+		if err != nil {
+			fmt.Println("csv açılamadi")
+		}
+
+		defer csvfile.Close() //program sonunda dosyayı kapa
+
+		csvLines, err := csv.NewReader(csvfile).ReadAll() //dosyayı oku
+
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		reviews := []ReviewData{}
+
+		for _, line := range csvLines {
+			reviews = append(reviews, ReviewData{
+				Comment: line[0],
+				Class:   line[1], //'1'. sutun
+			})
+		}
+
+		positiveReview := []string{}
+		negativeReview := []string{}
+
+		for _, item := range reviews { //sadece reviewleri alma ve ayırma
+			if item.Class == "positive" {
+				positiveReview = append(positiveReview, item.Comment)
+			}
+			if item.Class == "negative" {
+				negativeReview = append(negativeReview, item.Comment)
+			}
+		}
+		positiveReviewWords := preProcessReviews(positiveReview)
+
+		negativeReviewWords := preProcessReviews(negativeReview)
+
+		service := NewService(repository, positiveReviewWords, negativeReviewWords)
+		api := NewAPI(&service)
+
+		app := SetupApp(&api)
+
+		product := Product{
+			ID:          GenerateUUID(8),
+			Name:        "Test Product",
+			Price:       55.55,
+			Description: "Test Description",
+		}
+		repository.AddProduct(product)
+
+		Convey("When comment data sent with product id", func() {
+
+			commentDTO := CommentDTO{
+				Text: "Comment",
+			}
+
+			reqBody, err := json.Marshal(commentDTO)
+			So(err, ShouldBeNil)
+
+			req, _ := http.NewRequest(http.MethodPatch, "/products/"+product.ID+"/comments", bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+			resp, err := app.Test(req, 300000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 201", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusCreated)
+			})
+
+			Convey("Then product with new comment should return", func() {
+				actualResult := Product{}
+				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+				err := json.Unmarshal(actualResponseBody, &actualResult)
+
+				So(err, ShouldBeNil)
+
+				So(actualResult.ID, ShouldEqual, product.ID)
+				So(actualResult.Name, ShouldEqual, product.Name)
+				So(actualResult.Description, ShouldEqual, product.Description)
+				So(actualResult.Price, ShouldEqual, product.Price)
+				So(actualResult.Comments, ShouldHaveLength, 1)
+				So(actualResult.Comments[0].Text, ShouldEqual, "Comment")
+			})
+		})
+	})
+
 }
 
 func GetCleanTestRepository() *Repository {

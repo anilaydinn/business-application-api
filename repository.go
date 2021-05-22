@@ -17,10 +17,11 @@ type UserEntity struct {
 }
 
 type ProductEntity struct {
-	ID       string   `bson:"id"`
-	Name     string   `bson:"name"`
-	Price    float64  `bson:"price"`
-	Comments []string `bson:"comments"`
+	ID          string   `bson:"id"`
+	Name        string   `bson:"name"`
+	Description string   `bson:"description"`
+	Price       float64  `bson:"price"`
+	Comments    []string `bson:"comments"`
 }
 
 type CommentEntity struct {
@@ -409,10 +410,11 @@ func convertCommentEntitiesToCommentModels(commentEntities []CommentEntity) []Co
 
 func convertProductModelToProductEntity(product Product) ProductEntity {
 	return ProductEntity{
-		ID:       product.ID,
-		Name:     product.Name,
-		Price:    product.Price,
-		Comments: product.CommentIDList,
+		ID:          product.ID,
+		Name:        product.Name,
+		Description: product.Description,
+		Price:       product.Price,
+		Comments:    product.CommentIDList,
 	}
 }
 
@@ -420,6 +422,7 @@ func convertProductEntityToProductModel(productEntity ProductEntity) Product {
 	return Product{
 		ID:            productEntity.ID,
 		Name:          productEntity.Name,
+		Description:   productEntity.Description,
 		Price:         productEntity.Price,
 		CommentIDList: productEntity.Comments,
 	}
