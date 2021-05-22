@@ -19,6 +19,7 @@ type UserEntity struct {
 type ProductEntity struct {
 	ID          string   `bson:"id"`
 	Name        string   `bson:"name"`
+	Image       []byte   `bson:"image"`
 	Description string   `bson:"description"`
 	Price       float64  `bson:"price"`
 	Comments    []string `bson:"comments"`
@@ -412,6 +413,7 @@ func convertProductModelToProductEntity(product Product) ProductEntity {
 	return ProductEntity{
 		ID:          product.ID,
 		Name:        product.Name,
+		Image:       product.Image,
 		Description: product.Description,
 		Price:       product.Price,
 		Comments:    product.CommentIDList,
@@ -422,6 +424,7 @@ func convertProductEntityToProductModel(productEntity ProductEntity) Product {
 	return Product{
 		ID:            productEntity.ID,
 		Name:          productEntity.Name,
+		Image:         productEntity.Image,
 		Description:   productEntity.Description,
 		Price:         productEntity.Price,
 		CommentIDList: productEntity.Comments,

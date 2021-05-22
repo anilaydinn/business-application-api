@@ -28,6 +28,7 @@ type User struct {
 type Product struct {
 	ID            string    `json:"id"`
 	Name          string    `json:"name"`
+	Image         []byte    `json:"image"`
 	Price         float64   `json:"price"`
 	Description   string    `json:"description"`
 	Comments      []Comment `json:"comments"`
@@ -184,6 +185,7 @@ func (service *Service) AddProduct(productDTO ProductDTO) (*Product, error) {
 	product := &Product{
 		ID:          GenerateUUID(8),
 		Name:        productDTO.Name,
+		Image:       productDTO.Image,
 		Description: productDTO.Description,
 		Price:       productDTO.Price,
 	}

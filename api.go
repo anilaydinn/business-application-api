@@ -15,6 +15,7 @@ type UserDTO struct {
 
 type ProductDTO struct {
 	Name        string  `json:"name"`
+	Image       []byte  `json:"image"`
 	Description string  `json:"description"`
 	Price       float64 `json:"price"`
 }

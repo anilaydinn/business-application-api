@@ -502,6 +502,7 @@ func TestAddProduct(t *testing.T) {
 
 			productDTO := ProductDTO{
 				Name:        "New Product Name",
+				Image:       getSampleImage(),
 				Description: "This is product description",
 				Price:       11.0,
 			}
@@ -528,6 +529,7 @@ func TestAddProduct(t *testing.T) {
 
 				So(actualResult.ID, ShouldNotBeNil)
 				So(actualResult.Name, ShouldEqual, productDTO.Name)
+				So(len(actualResult.Image), ShouldBeGreaterThan, 0)
 				So(actualResult.Description, ShouldEqual, productDTO.Description)
 				So(actualResult.Price, ShouldEqual, productDTO.Price)
 			})
