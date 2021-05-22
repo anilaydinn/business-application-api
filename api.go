@@ -230,6 +230,8 @@ func (api *API) CreateUserHandler(c *fiber.Ctx) error {
 	case nil:
 		c.JSON(user)
 		c.Status(fiber.StatusCreated)
+	case UserAlreadyRegisteredError:
+		c.Status(fiber.StatusBadRequest)
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}

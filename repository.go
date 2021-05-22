@@ -13,7 +13,7 @@ import (
 type UserEntity struct {
 	ID       string `bson:"id"`
 	Username string `bson:"username"`
-	Password string `bson:"-"`
+	Password string `bson:"password"`
 }
 
 type ProductEntity struct {
@@ -39,7 +39,7 @@ type Repository struct {
 }
 
 func NewRepository() *Repository {
-	uri := "mongodb+srv://admin:XixQfYeo7huO9VkT@cluster0.ljcyz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
+	uri := "mongodb+srv://admin:sk45dgnFHltHOKiG@cluster0.ljcyz.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
@@ -303,6 +303,33 @@ func (repository *Repository) GetUser(userID string) (*User, error) {
 	defer cancel()
 
 	cur := collection.FindOne(ctx, bson.M{"id": userID})
+
+	if cur.Err() != nil {
+		return nil, cur.Err()
+	}
+
+	if cur == nil {
+		return nil, UserNotFoundError
+	}
+
+	userEntity := UserEntity{}
+	err := cur.Decode(&userEntity)
+
+	if err != nil {
+		return nil, err
+	}
+
+	user := convertUserEntityToUserModel(userEntity)
+
+	return &user, nil
+}
+
+func (repository *Repository) GetUserByUsername(username string) (*User, error) {
+	collection := repository.client.Database("business").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 300*time.Second)
+	defer cancel()
+
+	cur := collection.FindOne(ctx, bson.M{"username": username})
 
 	if cur.Err() != nil {
 		return nil, cur.Err()

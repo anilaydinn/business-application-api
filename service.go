@@ -57,6 +57,7 @@ const (
 var CommentNotFoundError error = errors.New("Comment not found!")
 var ProductNotFoundError error = errors.New("Product not found!")
 var UserNotFoundError error = errors.New("User not found!")
+var UserAlreadyRegisteredError error = errors.New("User already registered!")
 
 func NewService(repository *Repository, positiveReviewWords []string, negativeReviewWords []string) Service {
 	return Service{
@@ -204,6 +205,12 @@ func (service *Service) UpdateProduct(productID string, productDTO ProductDTO) (
 }
 
 func (service *Service) CreateUser(userDTO UserDTO) (*User, error) {
+
+	existingUser, _ := service.repository.GetUserByUsername(userDTO.Username)
+
+	if existingUser != nil {
+		return nil, UserAlreadyRegisteredError
+	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(userDTO.Password), bcrypt.DefaultCost)
 

@@ -591,6 +591,13 @@ func TestCreateUser(t *testing.T) {
 
 		app := SetupApp(&api)
 
+		user := User{
+			ID:       GenerateUUID(8),
+			Username: "test-user",
+			Password: "test-pw",
+		}
+		repository.CreateUser(user)
+
 		Convey("When the new user request sent with user data", func() {
 
 			userDTO := UserDTO{
@@ -622,6 +629,28 @@ func TestCreateUser(t *testing.T) {
 				So(actualResult.Username, ShouldEqual, userDTO.Username)
 			})
 		})
+
+		Convey("When already registered username user data request sent", func() {
+			userDTO := UserDTO{
+				Username: "test-user",
+				Password: "asdasd",
+			}
+
+			reqBody, err := json.Marshal(userDTO)
+			So(err, ShouldBeNil)
+
+			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(reqBody))
+			req.Header.Add("Content-Type", "application/json")
+			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+			resp, err := app.Test(req, 300000)
+			So(err, ShouldBeNil)
+
+			Convey("Then status code should be 400", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusBadRequest)
+			})
+		})
+
 	})
 }
 
