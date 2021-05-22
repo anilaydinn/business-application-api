@@ -29,9 +29,9 @@ type CommentEntity struct {
 	PNModel PNModel `bson:"pnModel"`
 }
 
-type reviewDataEntity struct {
-	comment string `bson:"comment"`
-	class   string `bson:"class"`
+type ReviewDataEntity struct {
+	Comment string `bson:"comment"`
+	Class   string `bson:"class"`
 }
 
 type Repository struct {
@@ -364,7 +364,7 @@ func (repository *Repository) GetReviewsData() ([]ReviewData, error) {
 
 	reviews := []ReviewData{}
 	for cur.Next(ctx) {
-		reviewDataEntity := reviewDataEntity{}
+		reviewDataEntity := ReviewDataEntity{}
 		err := cur.Decode(&reviewDataEntity)
 		if err != nil {
 			return nil, err
@@ -425,10 +425,10 @@ func convertProductEntityToProductModel(productEntity ProductEntity) Product {
 	}
 }
 
-func convertReviewDataEntityToReviewData(reviewDataEntity reviewDataEntity) ReviewData {
+func convertReviewDataEntityToReviewData(reviewDataEntity ReviewDataEntity) ReviewData {
 	return ReviewData{
-		Comment: reviewDataEntity.comment,
-		Class:   reviewDataEntity.class,
+		Comment: reviewDataEntity.Comment,
+		Class:   reviewDataEntity.Class,
 	}
 }
 

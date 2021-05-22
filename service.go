@@ -258,7 +258,10 @@ func (service *Service) AnalyzeText(text string) (Comment, error) {
 	return Comment{
 		Text: text,
 		PNModel: PNModel{
-			PN: variable, PositiveRatio: ratios[0], NegativeRatio: ratios[1]},
+			PN:            variable,
+			PositiveRatio: ratios[0],
+			NegativeRatio: ratios[1],
+		},
 	}, nil
 }
 
