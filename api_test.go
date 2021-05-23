@@ -38,7 +38,7 @@ func TestGetComments(t *testing.T) {
 
 		Convey("When the get comments request sent", func() {
 			app := SetupApp(&api)
-			req, _ := http.NewRequest(http.MethodGet, "/comments", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/comments", nil)
 
 			resp, err := app.Test(req)
 			So(err, ShouldBeNil)
@@ -82,7 +82,7 @@ func TestGetComment(t *testing.T) {
 
 		Convey("When the get comment request sent with comment id", func() {
 			app := SetupApp(&api)
-			req, _ := http.NewRequest(http.MethodGet, "/comments/"+comment2.ID, nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/comments/"+comment2.ID, nil)
 
 			resp, err := app.Test(req)
 			So(err, ShouldBeNil)
@@ -103,7 +103,7 @@ func TestGetComment(t *testing.T) {
 
 		Convey("When the get comment request sent with non existing comment id", func() {
 			app := SetupApp(&api)
-			req, _ := http.NewRequest(http.MethodGet, "/comments/654dasasd56d", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/comments/654dasasd56d", nil)
 
 			resp, err := app.Test(req)
 			So(err, ShouldBeNil)
@@ -169,7 +169,7 @@ func TestAddComment(t *testing.T) {
 			reqBody, err := json.Marshal(commentDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPost, "/comments", bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPost, "/api/comments", bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
@@ -212,7 +212,7 @@ func TestDeleteComment(t *testing.T) {
 
 		Convey("When comment delete request sent", func() {
 			app := SetupApp(&api)
-			req, _ := http.NewRequest(http.MethodDelete, "/comments/"+comment.ID, nil)
+			req, _ := http.NewRequest(http.MethodDelete, "/api/comments/"+comment.ID, nil)
 			resp, err := app.Test(req, 30000)
 			So(err, ShouldBeNil)
 
@@ -252,7 +252,7 @@ func TestUpdateComment(t *testing.T) {
 			reqBody, err := json.Marshal(commentDTO)
 			So(err, ShouldBeNil)
 
-			req, err := http.NewRequest(http.MethodPatch, "/comments/"+comment.ID, bytes.NewReader(reqBody))
+			req, err := http.NewRequest(http.MethodPatch, "/api/comments/"+comment.ID, bytes.NewReader(reqBody))
 			req.Header.Add("Content-type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 			So(err, ShouldBeNil)
@@ -332,7 +332,7 @@ func TestAnalyzeText(t *testing.T) {
 			reqBody, err := json.Marshal(commentDTO)
 			So(err, ShouldBeNil)
 
-			req, err := http.NewRequest(http.MethodPost, "/analyze", bytes.NewReader(reqBody))
+			req, err := http.NewRequest(http.MethodPost, "/api/analyze", bytes.NewReader(reqBody))
 			req.Header.Add("Content-type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 			So(err, ShouldBeNil)
@@ -408,7 +408,7 @@ func TestGetProducts(t *testing.T) {
 		repository.AddProduct(product2)
 
 		Convey("When get products request sent", func() {
-			req, _ := http.NewRequest(http.MethodGet, "/products", nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/products", nil)
 
 			resp, err := app.Test(req, 30000)
 			So(err, ShouldBeNil)
@@ -467,7 +467,7 @@ func TestGetProduct(t *testing.T) {
 		repository.AddProduct(product2)
 
 		Convey("When the get product request sent with id params", func() {
-			req, _ := http.NewRequest(http.MethodGet, "/products/"+product2.ID, nil)
+			req, _ := http.NewRequest(http.MethodGet, "/api/products/"+product2.ID, nil)
 
 			resp, err := app.Test(req, 30000)
 			So(err, ShouldBeNil)
@@ -510,7 +510,7 @@ func TestAddProduct(t *testing.T) {
 			reqBody, err := json.Marshal(productDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPost, "/products", bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPost, "/api/products", bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
@@ -562,7 +562,7 @@ func TestUpdateProduct(t *testing.T) {
 			reqBody, err := json.Marshal(productDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPatch, "/products/"+product.ID, bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPatch, "/api/products/"+product.ID, bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
@@ -612,7 +612,7 @@ func TestCreateUser(t *testing.T) {
 			reqBody, err := json.Marshal(userDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPost, "/api/users/register", bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
@@ -643,7 +643,7 @@ func TestCreateUser(t *testing.T) {
 			reqBody, err := json.Marshal(userDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPost, "/users", bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPost, "/api/users/register", bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
@@ -722,7 +722,7 @@ func TestAddCommentProduct(t *testing.T) {
 			reqBody, err := json.Marshal(commentDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPatch, "/products/"+product.ID+"/comments", bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPatch, "/api/products/"+product.ID+"/comments", bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
@@ -777,7 +777,7 @@ func TestUserLogin(t *testing.T) {
 			reqBody, err := json.Marshal(userCredentialsDTO)
 			So(err, ShouldBeNil)
 
-			req, _ := http.NewRequest(http.MethodPost, "/users/login", bytes.NewReader(reqBody))
+			req, _ := http.NewRequest(http.MethodPost, "/api/users/login", bytes.NewReader(reqBody))
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 

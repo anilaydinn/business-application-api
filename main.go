@@ -51,22 +51,24 @@ func SetupApp(api *API) *fiber.App {
 		AllowCredentials: true,
 	}))
 
-	app.Post("/analyze", api.AnalyzeTextHandler)
+	app.Post("api/analyze", api.AnalyzeTextHandler)
 
-	app.Post("/comments", api.AddCommentHandler)
-	app.Get("/comments", api.GetCommentsHandler)
-	app.Get("/comments/:id", api.GetCommentHandler)
-	app.Delete("/comments/:id", api.DeleteCommentHandler)
-	app.Patch("/comments/:id", api.UpdateCommentHandler)
+	app.Post("/api/comments", api.AddCommentHandler)
+	app.Get("/api/comments", api.GetCommentsHandler)
+	app.Get("/api/comments/:id", api.GetCommentHandler)
+	app.Delete("/api/comments/:id", api.DeleteCommentHandler)
+	app.Patch("/api/comments/:id", api.UpdateCommentHandler)
 
-	app.Post("/products", api.AddProductHandler)
-	app.Get("/products", api.GetProductsHandler)
-	app.Get("/products/:id", api.GetProductHandler)
-	app.Patch("/products/:id", api.UpdateProductHandler)
-	app.Patch("/products/:id/comments", api.AddProductCommentHandler)
+	app.Post("/api/products", api.AddProductHandler)
+	app.Get("/api/products", api.GetProductsHandler)
+	app.Get("/api/products/:id", api.GetProductHandler)
+	app.Patch("/api/products/:id", api.UpdateProductHandler)
+	app.Patch("/api/products/:id/comments", api.AddProductCommentHandler)
 
-	app.Post("/users", api.CreateUserHandler)
-	app.Post("/users/login", api.LoginHandler)
+	app.Post("/api/users/register", api.CreateUserHandler)
+	app.Post("/api/users/login", api.LoginHandler)
+	app.Get("/api/user", api.UserHandler)
+	app.Post("/api/logout", api.LogoutHandler)
 
 	return app
 }

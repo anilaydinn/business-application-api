@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -288,5 +291,42 @@ func (api *API) LoginHandler(c *fiber.Ctx) error {
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}
+	return nil
+}
+
+func (api *API) UserHandler(c *fiber.Ctx) error {
+
+	cookie := c.Cookies("user-token")
+
+	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(t *jwt.Token) (interface{}, error) {
+		return []byte(SecretKey), nil
+	})
+
+	if err != nil {
+		c.Status(fiber.StatusUnauthorized)
+		return nil
+	}
+
+	claims := token.Claims.(*jwt.StandardClaims)
+
+	user, err := api.service.repository.GetUser(claims.Issuer)
+
+	if err != nil {
+		c.Status(fiber.StatusUnauthorized)
+		return nil
+	}
+
+	return c.JSON(user)
+}
+
+func (api *API) LogoutHandler(c *fiber.Ctx) error {
+	cookie := fiber.Cookie{
+		Name:     "user-token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		HTTPOnly: true,
+	}
+
+	c.Cookie(&cookie)
 	return nil
 }
