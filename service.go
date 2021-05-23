@@ -309,7 +309,6 @@ func (service *Service) Login(userCredentials UserCredentialsDTO) (*Token, *fibe
 		Name:     "user-token",
 		Value:    token,
 		Expires:  time.Now().Add(time.Hour * 24),
-		HTTPOnly: true,
 	}
 
 	return &Token{

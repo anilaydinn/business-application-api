@@ -68,7 +68,7 @@ func SetupApp(api *API) *fiber.App {
 	app.Post("/api/users/register", api.CreateUserHandler)
 	app.Post("/api/users/login", api.LoginHandler)
 	app.Get("/api/user", api.UserHandler)
-	app.Post("/api/logout", api.LogoutHandler)
+
 
 	return app
 }

@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 )
@@ -317,16 +315,4 @@ func (api *API) UserHandler(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(user)
-}
-
-func (api *API) LogoutHandler(c *fiber.Ctx) error {
-	cookie := fiber.Cookie{
-		Name:     "user-token",
-		Value:    "",
-		Expires:  time.Now().Add(-time.Hour),
-		HTTPOnly: true,
-	}
-
-	c.Cookie(&cookie)
-	return nil
 }
