@@ -31,7 +31,7 @@ type Product struct {
 	Image         []byte    `json:"image"`
 	Price         float64   `json:"price"`
 	Description   string    `json:"description"`
-	Comments      []Comment `json:"comments"`
+	Comments      []Comment `json:"comments,omitempty"`
 	CommentIDList []string  `json:"-"`
 }
 
@@ -172,6 +172,12 @@ func (service *Service) GetProducts() ([]Product, error) {
 func (service *Service) GetProduct(productID string) (*Product, error) {
 
 	product, err := service.repository.GetProduct(productID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	product.Comments, err = service.repository.GetCommentsByIDList(product.CommentIDList)
 
 	if err != nil {
 		return nil, err

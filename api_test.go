@@ -514,7 +514,7 @@ func TestAddProduct(t *testing.T) {
 			req.Header.Add("Content-Type", "application/json")
 			req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
 
-			resp, err := app.Test(req)
+			resp, err := app.Test(req, 30000)
 			So(err, ShouldBeNil)
 
 			Convey("Then status code should be 201", func() {

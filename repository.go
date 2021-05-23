@@ -410,6 +410,11 @@ func convertCommentEntitiesToCommentModels(commentEntities []CommentEntity) []Co
 }
 
 func convertProductModelToProductEntity(product Product) ProductEntity {
+
+	if product.CommentIDList == nil {
+		product.CommentIDList = []string{}
+	}
+
 	return ProductEntity{
 		ID:          product.ID,
 		Name:        product.Name,
