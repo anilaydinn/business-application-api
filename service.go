@@ -68,6 +68,7 @@ var ProductNotFoundError error = errors.New("Product not found!")
 var UserNotFoundError error = errors.New("User not found!")
 var UserAlreadyRegisteredError error = errors.New("User already registered!")
 var WrongPasswordError error = errors.New("Wrong password!")
+var CommentNotBeEmptyString error = errors.New("Comment not be empty string!")
 
 const SecretKey = "14465375-b4a8-47fa-9692-c986d4a825ee"
 
@@ -255,6 +256,10 @@ func (service *Service) CreateUser(userDTO UserDTO) (*User, error) {
 
 func (service *Service) AddProductComment(productID string, commentDTO CommentDTO) (*Product, error) {
 
+	if commentDTO.Text == "" {
+		return nil, CommentNotBeEmptyString
+	}
+
 	comment, err := service.AddComment(commentDTO.Text)
 
 	if err != nil {
@@ -312,9 +317,9 @@ func (service *Service) Login(userCredentials UserCredentialsDTO) (*Token, *fibe
 	}
 
 	cookie := fiber.Cookie{
-		Name:     "user-token",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24),
+		Name:    "user-token",
+		Value:   token,
+		Expires: time.Now().Add(time.Hour * 24),
 	}
 
 	return &Token{

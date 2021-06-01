@@ -261,6 +261,8 @@ func (api *API) AddProductCommentHandler(c *fiber.Ctx) error {
 	case nil:
 		c.JSON(product)
 		c.Status(fiber.StatusCreated)
+	case CommentNotBeEmptyString:
+		c.Status(fiber.StatusBadRequest)
 	default:
 		c.Status(fiber.StatusInternalServerError)
 	}

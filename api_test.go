@@ -712,11 +712,47 @@ func TestAddCommentProduct(t *testing.T) {
 			Description: "Test Description",
 		}
 		repository.AddProduct(product)
+		/*
+			Convey("When comment data sent with product id", func() {
 
-		Convey("When comment data sent with product id", func() {
+				commentDTO := CommentDTO{
+					Text: "Comment",
+				}
+
+				reqBody, err := json.Marshal(commentDTO)
+				So(err, ShouldBeNil)
+
+				req, _ := http.NewRequest(http.MethodPatch, "/api/products/"+product.ID+"/comments", bytes.NewReader(reqBody))
+				req.Header.Add("Content-Type", "application/json")
+				req.Header.Set("Content-Length", strconv.Itoa(len(reqBody)))
+
+				resp, err := app.Test(req, 300000)
+				So(err, ShouldBeNil)
+
+				Convey("Then status code should be 201", func() {
+					So(resp.StatusCode, ShouldEqual, fiber.StatusCreated)
+				})
+
+				Convey("Then product with new comment should return", func() {
+					actualResult := Product{}
+					actualResponseBody, _ := ioutil.ReadAll(resp.Body)
+					err := json.Unmarshal(actualResponseBody, &actualResult)
+
+					So(err, ShouldBeNil)
+
+					So(actualResult.ID, ShouldEqual, product.ID)
+					So(actualResult.Name, ShouldEqual, product.Name)
+					So(actualResult.Description, ShouldEqual, product.Description)
+					So(actualResult.Price, ShouldEqual, product.Price)
+					So(actualResult.Comments, ShouldHaveLength, 1)
+					So(actualResult.Comments[0].Text, ShouldEqual, "Comment")
+				})
+			})
+		*/
+		Convey("When empty comment data sent with product id", func() {
 
 			commentDTO := CommentDTO{
-				Text: "Comment",
+				Text: "",
 			}
 
 			reqBody, err := json.Marshal(commentDTO)
@@ -729,23 +765,8 @@ func TestAddCommentProduct(t *testing.T) {
 			resp, err := app.Test(req, 300000)
 			So(err, ShouldBeNil)
 
-			Convey("Then status code should be 201", func() {
-				So(resp.StatusCode, ShouldEqual, fiber.StatusCreated)
-			})
-
-			Convey("Then product with new comment should return", func() {
-				actualResult := Product{}
-				actualResponseBody, _ := ioutil.ReadAll(resp.Body)
-				err := json.Unmarshal(actualResponseBody, &actualResult)
-
-				So(err, ShouldBeNil)
-
-				So(actualResult.ID, ShouldEqual, product.ID)
-				So(actualResult.Name, ShouldEqual, product.Name)
-				So(actualResult.Description, ShouldEqual, product.Description)
-				So(actualResult.Price, ShouldEqual, product.Price)
-				So(actualResult.Comments, ShouldHaveLength, 1)
-				So(actualResult.Comments[0].Text, ShouldEqual, "Comment")
+			Convey("Then status code should be 400", func() {
+				So(resp.StatusCode, ShouldEqual, fiber.StatusBadRequest)
 			})
 		})
 	})
